@@ -24,7 +24,7 @@ public class HL7PetController {
     Logger logger = Logger.getLogger(HL7PetController.class.getName());
     private String[][] emptyResults = new String[][] {{"No Results Match"}};
 
-    private String[][] invalidToken = new String[][] {{"No session present or session expired, please submit a new HL7 Message"}};
+    private String[][] invalidToken = new String[][] {{"{No session present or session expired, please submit a new HL7 Message}"}};
 
     private HashMap<SessionToken, HL7ParseUtils> parsers = new HashMap();
 

@@ -41,7 +41,9 @@ class App extends Component {
             return (<Warning showWarning={false} />)
 
         })
-        .catch(e => this.setState({errorMessage: e, results: []}));
+        .catch(e =>
+
+            this.setState({errorMessage: e.message, results: []}));
   };
 
     handleMessageChange = e => {
@@ -58,11 +60,17 @@ class App extends Component {
   extract = e => {
       e.preventDefault();
       fetch(`${SERVER_URL}/pet/extract?path=${this.state.path}&token=${this.state.token}`)
-          .then(r => r.json())
+          .then(r => {
+              if (r.status === 410) {
+                  this.setState({errorMessage: r.statusText, results: []})
+              } else if (r.status === 200) {
+                  return r.json()
+            }})
           .then( data => {
-              this.setState({ results: data, errorMessage: '' });
+              if (data)
+                this.setState({ results: data, errorMessage: '' });
           })
-          .catch(e => this.setState({errorMessage: e, results: []}));
+          .catch(e => console.error(e));
   };
 
   render() {
@@ -70,7 +78,7 @@ class App extends Component {
       <div className="App">
           <form id="newMessage">
             <h1>Enter HL7 Message below</h1><br/>
-            <textarea placeholder="Copy your HL7 message here!" cols="160" rows="15" value={this.state.message} readOnly={false} onChange={this.handleMessageChange} />
+            <textarea  id="nowrap" placeholder="Copy your HL7 message here!" cols="160" rows="15" value={this.state.message} readOnly={false} onChange={this.handleMessageChange}  />
             <button onClick={this.resetMessage}>Refresh</button>
             <div className="Warning">
                 <Warning/>
@@ -94,7 +102,7 @@ class App extends Component {
                       })}
               </div>
               <div id ="errors">
-                  {/*<p>{this.state.errorMessage}</p>*/}
+                  <div className="alert alert-danger" role="alert">{this.state.errorMessage}</div>
               </div>
           </form>
       </div>
