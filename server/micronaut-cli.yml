@@ -1,5 +1,5 @@
 profile: service
-defaultPackage: example.micronaut
+defaultPackage: open.HL7PET.service
 ---
 testFramework: spock
 sourceLanguage: java

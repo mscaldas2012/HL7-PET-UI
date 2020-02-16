@@ -1,6 +1,6 @@
 micronaut:
   application:
-    name: server
+    name: HL7PET_service
 ---
 #tag::cors[]
 micronaut:

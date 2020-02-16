@@ -6,11 +6,11 @@ import java.util.UUID;
 
 public class SessionToken {
     private String token ;
-    private Date created;
+    private Date lastUpdated;
 
     public SessionToken() {
         this.token = UUID.randomUUID().toString();
-        this.created = new Date();
+        this.lastUpdated = new Date();
     }
 
     public SessionToken(String token) {
@@ -23,6 +23,14 @@ public class SessionToken {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public Date getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void setLastUpdated(Date lastUpdated) {
+        this.lastUpdated = lastUpdated;
     }
 
     //Allows to compare just the token with a single String.

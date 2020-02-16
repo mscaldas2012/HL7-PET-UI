@@ -20,7 +20,8 @@ class App extends Component {
         message: '',
         path: '',
         results: [],
-        token: ''
+        token: '',
+        errorMessage: ''
   };
 
 
@@ -40,7 +41,7 @@ class App extends Component {
             return (<Warning showWarning={false} />)
 
         })
-        .catch(e => console.error(e));
+        .catch(e => this.setState({errorMessage: e, results: []}));
   };
 
     handleMessageChange = e => {
@@ -59,9 +60,9 @@ class App extends Component {
       fetch(`${SERVER_URL}/pet/extract?path=${this.state.path}&token=${this.state.token}`)
           .then(r => r.json())
           .then( data => {
-              this.setState({ results: data });
+              this.setState({ results: data, errorMessage: '' });
           })
-          .catch(e => console.error(e));
+          .catch(e => this.setState({errorMessage: e, results: []}));
   };
 
   render() {
@@ -78,9 +79,9 @@ class App extends Component {
 
           <form id="pathExtraction">
               <div>
-                <h2>Path:
+                <h4>Path:
                 <input type="text" value={this.state.path} onBlur={this.extract} readOnly={false} onChange={this.handlePathChange} size="50"/><button onClick={this.extract}>Go</button>
-                </h2>
+                </h4>
               </div>
               <div>
                 <h1>Results:</h1>
@@ -91,7 +92,9 @@ class App extends Component {
                           //return (<div>{s.map(item =>  <div className="alert alert-secondary" role="alert">{item}</div>)}</div>)
 
                       })}
-
+              </div>
+              <div id ="errors">
+                  {/*<p>{this.state.errorMessage}</p>*/}
               </div>
           </form>
       </div>

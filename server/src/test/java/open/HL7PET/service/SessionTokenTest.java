@@ -2,6 +2,7 @@ package open.HL7PET.service;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Date;
 import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,6 +32,12 @@ class SessionTokenTest {
         //Would like to simply pass the token value and still find the right SessionToken.
         Integer i3 = map.get(new SessionToken(s3.getToken()));
         assertTrue(i3 == 3);
+
+        System.out.println("map.size() = " + map.size());
+        s5.setLastUpdated(new Date());
+        map.put(s5, 6);
+
+        System.out.println("map.size() = " + map.size());
 
     }
     
