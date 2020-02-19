@@ -1,17 +1,11 @@
 import React, { Component } from 'react';
 import './App.css';
+import ProfileDD from './Profiles';
+import './UploadProfile';
+
 import {SERVER_URL} from "./config";
+import UploadProfile from "./UploadProfile";
 
-class Warning extends Component {
-    render() {
-
-        return ( this.props.showWarning ?
-            <div className="alert alert-primary" role="alert">CLick Refresh before trying to retrieve information from this message</div>: null
-        );
-    }
-};
-
-//const Warning = ({ showWarning }) => {showWarning ?}  <div className="alert alert-primary" role="alert">CLick Refresh before trying to retrieve information from this message</div> :  null}
 
 class App extends Component {
 
@@ -21,13 +15,14 @@ class App extends Component {
         path: '',
         results: [],
         token: '',
-        errorMessage: ''
+        errorMessage: '',
+        selectedProfile: 'default'
   };
 
 
   resetMessage = e => {
     e.preventDefault();
-    fetch(`${SERVER_URL}/pet/message`, {
+    fetch(`${SERVER_URL}/pet/message?profile=${this.state.selectedProfile}`, {
         method: 'post',
         header: {
            'Accept': 'application/json',
@@ -35,27 +30,30 @@ class App extends Component {
         },
         body: this.state.message
     })
-        .then(r => r.json())
+        .then(r =>  r.json())
         .then(data => {
-            this.setState({ token: data.token})
-            return (<Warning showWarning={false} />)
-
+            if (data.token) { //Everythng went ok...
+                this.setState({token: data.token, errorMessage: ''});
+                return (<Warning showWarning={false}/>)
+            } else { // Error happened
+                this.setState({errorMessage: data.description, results: []})
+            }
         })
-        .catch(e =>
-
-            this.setState({errorMessage: e.message, results: []}));
+        .catch(e => {
+            this.setState({errorMessage: e.message, results: []})
+        })
   };
 
     handleMessageChange = e => {
         this.setState({message: e.target.value});
          return (<Warning showWarning={true} />)
-    }
+    };
 
 
 
     handlePathChange = e => {
         this.setState( {path: e.target.value})
-    }
+    };
 
   extract = e => {
       e.preventDefault();
@@ -73,11 +71,17 @@ class App extends Component {
           .catch(e => console.error(e));
   };
 
+   profileChanged = newValue => {
+      this.setState({selectedProfile : newValue})
+  };
+
   render() {
     return (
       <div className="App">
           <form id="newMessage">
             <h1>Enter HL7 Message below</h1><br/>
+            <ProfileDD changed={this.profileChanged}/>
+            <UploadProfile />
             <textarea  id="nowrap" placeholder="Copy your HL7 message here!" cols="160" rows="15" value={this.state.message} readOnly={false} onChange={this.handleMessageChange}  />
             <button onClick={this.resetMessage}>Refresh</button>
             <div className="Warning">
@@ -109,5 +113,16 @@ class App extends Component {
     );
   }
 }
+
+
+class Warning extends Component {
+    render() {
+        return ( this.props.showWarning ?
+                <div className="alert alert-primary" role="alert">CLick Refresh before trying to retrieve information from this message</div>: null
+        )
+    }
+}
+
+//const Warning = ({ showWarning }) => {showWarning ?}  <div className="alert alert-primary" role="alert">CLick Refresh before trying to retrieve information from this message</div> :  null}
 
 export default App;

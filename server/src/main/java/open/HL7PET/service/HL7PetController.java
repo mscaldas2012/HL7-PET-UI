@@ -1,20 +1,30 @@
 package open.HL7PET.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.scala.DefaultScalaModule;
 import io.micronaut.context.annotation.Parameter;
+import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.MediaType;
-import io.micronaut.http.annotation.Body;
-import io.micronaut.http.annotation.Controller;
-import io.micronaut.http.annotation.Get;
-import io.micronaut.http.annotation.Post;
+import io.micronaut.http.annotation.Error;
+import io.micronaut.http.annotation.*;
+import io.micronaut.http.multipart.CompletedFileUpload;
 import io.micronaut.scheduling.annotation.Scheduled;
 import open.HL7PET.tools.HL7ParseUtils;
+import open.HL7PET.tools.model.Profile;
 import scala.Option;
 
+import javax.annotation.PostConstruct;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.URI;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.logging.Logger;
+
 
 @Controller("/pet")
 public class HL7PetController {
@@ -26,13 +36,31 @@ public class HL7PetController {
 
     private String[][] invalidToken = new String[][] {{"{No session present or session expired, please submit a new HL7 Message}"}};
 
-    private HashMap<SessionToken, HL7ParseUtils> parsers = new HashMap();
 
+    private static final String DEFAULT = "default";
+
+    private HashMap<SessionToken, HL7ParseUtils> parsers = new HashMap<>();
+    private HashMap<String, Profile> profiles = new HashMap<>();
+
+    private ObjectMapper mapper = new ObjectMapper();
+
+    @PostConstruct
+    public void init() throws IOException {
+        mapper.registerModule(new DefaultScalaModule());
+        InputStream inputStream = getClass().getClassLoader().getResourceAsStream("PhinGuideProfile_NoORC.json");
+        assert inputStream != null;
+        Reader targetReader = new InputStreamReader(inputStream);
+        Profile profile = mapper.readValue(targetReader, Profile.class);
+
+        profiles.put(DEFAULT, profile);
+
+
+    }
 
     @Post(value = "/message", produces = MediaType.APPLICATION_JSON, consumes = MediaType.TEXT_PLAIN)
-    public HttpResponse resetMessage(@Body String newMessage) {
-        logger.info("AUDIT::Resetting Message");
-        HL7ParseUtils newParser = new HL7ParseUtils(newMessage);
+    public HttpResponse resetMessage(@QueryValue String profile, @Body String newMessage) {
+        logger.info("AUDIT::Resetting Message for profile " + profile);
+        HL7ParseUtils newParser = new HL7ParseUtils(newMessage, profiles.get(profile));
         SessionToken newToken = new SessionToken();
         parsers.put(newToken, newParser);
         return HttpResponse.ok(newToken);
@@ -55,6 +83,29 @@ public class HL7PetController {
             return HttpResponse.ok(emptyResults);
     }
 
+
+    @Get("/profiles")
+    public HttpResponse<String[]> getProfiles() {
+        String[] result =  this.profiles.keySet().toArray(new String[this.profiles.size()]);
+        return HttpResponse.ok(result);
+    }
+    @Post("/profile")
+    @Consumes(MediaType.MULTIPART_FORM_DATA) // <5>
+    public HttpResponse upload(CompletedFileUpload file) throws IOException { // <7>
+        logger.info("AUDIT::Uploading new profile " + file.getFilename());
+        if ((file.getFilename() == null || file.getFilename().equals(""))) {
+            return HttpResponse.badRequest();
+        }
+        Reader targetReader = new InputStreamReader(file.getInputStream());
+        Profile newProfile = mapper.readValue(targetReader, Profile.class);
+
+        profiles.put(file.getFilename(), newProfile);
+        logger.info("profile successfully loaded");
+        return HttpResponse.ok();
+    }
+    //end::upload[]
+
+
     @Scheduled(fixedDelay = "5m")
     public void cleanCache() {
         logger.fine("Executing clean cache");
@@ -63,5 +114,16 @@ public class HL7PetController {
 
         parsers.entrySet().removeIf( e -> e.getKey().getLastUpdated().before(deadline.getTime()));
         logger.fine("\tCache size: " + parsers.size());
+    }
+
+
+
+
+    @Error
+    public HttpResponse<ErrorReceipt> handleHL7ParserError(HttpRequest req, Exception e) {
+        logger.severe("Unable to Parse message with error: " + e.getMessage());
+        ErrorReceipt error = new ErrorReceipt("INVALID_MESSAGE", e.getMessage(), 400, req.getPath());
+        return HttpResponse.badRequest(error);
+
     }
 }
