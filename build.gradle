@@ -2,7 +2,7 @@ task copyClientResources(dependsOn: ':client:build') { //<1>
     group = 'build'
     description = 'Copy client resources into server'
 }
-copyClientResources.doFirst { //<2>
+copyClientResources.doLast { //<2>
     copy {
         from project(':client').buildDir.absolutePath
         into "${project(':server').buildDir}/resources/main/public"

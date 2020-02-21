@@ -2,50 +2,55 @@ import React, { Component } from 'react';
 
 import {SERVER_URL} from "./config";
 
+import axios from 'axios';
 
-import ReactUploadFile from 'react-upload-file';
+
+// import ReactUploadFile from 'react-upload-file';
 
 
-class ChooseButton extends Component {
+class UploadProfile extends Component {
 
     submit =  e => {
-        fetch(`${SERVER_URL}/pet/profile`, {
-            method: 'post',
-            header: {
-                'Content-Type': 'multipart/form-data'
-            },
-            body: e.target.value
+        let files = e.target.files;
+        let reader = new FileReader();
+        reader.readAsDataURL(files[0]); //readAsText?
+        reader.onload=(e1) => {
+            const formData = new FormData();
+            formData.append("file", files[0]);
 
-        })
-            .then(r => console.error("coming back!"))
-            . catch( e => console.error("error: " + e))
-    }
+            axios ({
+                method: 'post',
+                url: `${SERVER_URL}/pet/profile`,
+                data: formData
+            })
+        }
+    };
+
+
+
 
     render() {
         return (
-        <div>
-            {/*<form id="test">*/}
-                <input type="file" id="docpicker" />
-                <input type="submit" onClick={this.submit}/>
-            {/*</form>*/}
+        <div >
+            Or upload a new Profile: <input type="file" id="docpicker" name="file" onChange={this.submit}/>
         </div>
         )
     }
 }
 
-class UploadProfile extends Component {
-
-    render() {
-        /* set properties */
-        const options = {
-            baseUrl: `${SERVER_URL}/pet/profile`
-        };
-        /* Use ReactUploadFile with options */
-        /* Custom your buttons */
-        return (
-            <ReactUploadFile options={options} chooseFileButton={<ChooseButton />} />
-        );
-    }
-}
+// class UploadProfile extends Component {
+//
+//     render() {
+//         /* set properties */
+//         const options = {
+//             baseUrl: `${SERVER_URL}/pet/profile`
+//         };
+//         /* Use ReactUploadFile with options */
+//         /* Custom your buttons */
+//         return (
+//             <ReactUploadFile options={options} chooseFileButton={<ChooseButton />} />
+//         );
+//     }
+// }
 
 export default UploadProfile

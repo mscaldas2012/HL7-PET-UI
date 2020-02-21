@@ -3,6 +3,8 @@ import './App.css';
 import ProfileDD from './Profiles';
 import './UploadProfile';
 
+import Uploader from './Uploader'
+
 import {SERVER_URL} from "./config";
 import UploadProfile from "./UploadProfile";
 
@@ -80,8 +82,15 @@ class App extends Component {
       <div className="App">
           <form id="newMessage">
             <h1>Enter HL7 Message below</h1><br/>
-            <ProfileDD changed={this.profileChanged}/>
-            <UploadProfile />
+            <div className="row">
+                <div className="col-4">
+                    <ProfileDD changed={this.profileChanged}/>
+                </div>
+                <div className="col-8">
+                    <UploadProfile />
+                </div>
+            </div>
+            {/*<Uploader/>*/}
             <textarea  id="nowrap" placeholder="Copy your HL7 message here!" cols="160" rows="15" value={this.state.message} readOnly={false} onChange={this.handleMessageChange}  />
             <button onClick={this.resetMessage}>Refresh</button>
             <div className="Warning">

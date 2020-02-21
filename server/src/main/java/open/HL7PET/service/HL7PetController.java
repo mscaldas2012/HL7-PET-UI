@@ -89,8 +89,7 @@ public class HL7PetController {
         String[] result =  this.profiles.keySet().toArray(new String[this.profiles.size()]);
         return HttpResponse.ok(result);
     }
-    @Post("/profile")
-    @Consumes(MediaType.MULTIPART_FORM_DATA) // <5>
+    @Post(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA)
     public HttpResponse upload(CompletedFileUpload file) throws IOException { // <7>
         logger.info("AUDIT::Uploading new profile " + file.getFilename());
         if ((file.getFilename() == null || file.getFilename().equals(""))) {
